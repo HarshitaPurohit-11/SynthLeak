@@ -1,0 +1,14 @@
+{
+  "error": {
+    "code": "RESOURCE_NOT_FOUND",
+    "message": "Alert with ID 'ALT-9999-9999' was not found.",
+    "details": [
+      {
+        "field": "alert_id",
+        "issue": "No matching alert found in SQLite store."
+      }
+    ],
+    "timestamp": "2026-11-07T10:56:15.000Z"
+  }
+}
+

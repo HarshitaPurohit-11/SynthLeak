@@ -1,0 +1,21 @@
+{
+  "total": 1,
+  "items": [
+    {
+      "alert_id": "ALT-2026-0001",
+      "pipeline_id": "PIPE-001",
+      "sensor_id": "SENSOR-A1",
+      "timestamp": "2026-11-07T10:55:00.120Z",
+      "class_id": 2,
+      "class_label": "PINHOLE_LEAK",
+      "confidence": 0.9425,
+      "dominant_frequency_hz": 4250.0,
+      "sound_level_db": -18.4,
+      "severity": "WARNING",
+      "estimated_chainage_meters": 412.5,
+      "is_acknowledged": false,
+      "ticket_id": null
+    }
+  ]
+}
+

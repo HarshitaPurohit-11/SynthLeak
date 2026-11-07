@@ -1,0 +1,13 @@
+{
+  "alert_id": "ALT-2026-0001",
+  "pipeline_id": "PIPE-001",
+  "priority": "HIGH",
+  "assigned_crew": "Field Repair Unit Alpha",
+  "description": "Acoustic detection indicated pinhole leak near chainage 412m. Clamp inspection required.",
+  "location_estimate": {
+    "latitude": 28.6162,
+    "longitude": 77.2121,
+    "chainage_meters": 412.5
+  }
+}
+
