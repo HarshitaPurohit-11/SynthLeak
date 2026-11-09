@@ -18,13 +18,27 @@ class Settings:
     # API & Server
     HOST: str = os.getenv("HOST", "0.0.0.0")
     PORT: int = int(os.getenv("PORT", "8000"))
-    CORS_ORIGINS: list[str] = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-        "*",
-    ]
+
+    @property
+    def CORS_ORIGINS(self) -> list[str]:
+        raw = os.getenv("CORS_ORIGINS", "")
+        if raw.strip():
+            origins = [o.strip() for o in raw.split(",") if o.strip()]
+            if origins:
+                return origins
+        return [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+        ]
+
+    CORS_ORIGIN_REGEX: str = os.getenv(
+        "CORS_ORIGIN_REGEX",
+        r"https://.*(netlify\.app|vercel\.app|onrender\.com).*"
+    )
 
     # Database
     DEFAULT_DB: str = str(Path(__file__).resolve().parent.parent / "data" / "synthleak.db")

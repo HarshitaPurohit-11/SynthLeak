@@ -40,10 +40,14 @@ app = FastAPI(
 )
 
 # CORS Configuration
+_origins = settings.CORS_ORIGINS
+_allow_credentials = "*" not in _origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=_origins,
+    allow_origin_regex=settings.CORS_ORIGIN_REGEX if settings.CORS_ORIGIN_REGEX else None,
+    allow_credentials=_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -92,4 +96,15 @@ app.include_router(pipelines_router)
 app.include_router(alerts_router)
 app.include_router(tickets_router)
 app.include_router(ws_router)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "backend.main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=(settings.ENVIRONMENT == "development"),
+    )
+
 

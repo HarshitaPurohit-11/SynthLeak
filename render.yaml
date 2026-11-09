@@ -1,0 +1,35 @@
+# Render Blueprint for SynthLeak Backend
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: synthleak-backend
+    runtime: python
+    plan: free # Change to 'starter' if using a persistent disk
+    region: oregon
+    buildCommand: pip install --no-cache-dir -r requirements.txt && pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: PYTHONPATH
+        value: .
+      - key: CORS_ORIGINS
+        value: "http://localhost:5173,http://localhost:3000"
+      - key: CORS_ORIGIN_REGEX
+        value: "https://.*(netlify\\.app|vercel\\.app|onrender\\.com).*"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # For persistent database on Render Starter plan, uncomment disk below and set DATABASE_PATH:
+      # - key: DATABASE_PATH
+      #   value: /var/data/synthleak.db
+    # Persistent Disk (Optional: requires Render Starter plan or above)
+    # disk:
+    #   name: synthleak-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
+
