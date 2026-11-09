@@ -140,9 +140,15 @@ export function useStream(mode: Mode): StreamApi {
   pipelineStatus["PIPE-001"] = PHASE_PIPE_STATUS[phase.id];
 
   let connection: Connection;
-  if (mode === "demo") connection = playing ? "demo" : "demo-paused";
-  else if (wsStatus === "open") connection = gotFrame ? "live" : "waiting";
-  else connection = wsStatus;
+  if (mode === "demo") {
+    connection = playing ? "demo" : "demo-paused";
+  } else if (gotFrame) {
+    connection = "live";
+  } else if (wsStatus === "open") {
+    connection = "waiting";
+  } else {
+    connection = wsStatus;
+  }
 
   const demo: DemoControls | null = mode === "demo"
     ? { playing, toggle, restart, elapsed, total: SCENARIO_SECONDS, phase: current.id === phase.id ? phase : current,

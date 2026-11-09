@@ -5,7 +5,7 @@ import type { Connection, Mode } from "../../hooks/useStream";
 const CONN: Record<Connection, { text: string; cls: string }> = {
   connecting: { text: "Connecting...", cls: "warn" },
   waiting: { text: "Connected (Standby)", cls: "warn" },
-  live: { text: "Live Telemetry", cls: "ok" },
+  live: { text: "Connected (Live)", cls: "ok" },
   reconnecting: { text: "Reconnecting", cls: "bad" },
   demo: { text: "Scenario Simulation", cls: "sim" },
   "demo-paused": { text: "Simulation Paused", cls: "sim" },

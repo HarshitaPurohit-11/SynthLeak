@@ -78,6 +78,27 @@ npm run build        # production bundle in dist/
 - **Live backend** mode consumes `ws://<host>/ws/stream` and REST `GET /pipelines`, `GET /alerts` (polled every 5 s and
   right after an alert frame), `POST /tickets`. Unknown or malformed WebSocket messages are ignored; the socket
   reconnects with backoff and the UI shows the connection state. After 3 failed attempts it offers Demo replay.
+
+---
+
+## Production Deployment on Netlify
+
+### Required Environment Variables
+Configure the following environment variables in your Netlify Site Settings (**Site configuration $\rightarrow$ Environment variables**):
+
+| Variable | Recommended Production Value | Description |
+|---|---|---|
+| `VITE_API_BASE_URL` | `https://synthleak-backend.onrender.com` | Base URL of deployed Render backend REST API (no `/api` prefix). |
+| `VITE_WS_STREAM_URL` | `wss://synthleak-backend.onrender.com/ws/stream` | Full WebSocket URL for live telemetry streaming. |
+| `VITE_CARTO_API_KEY` | *(Optional)* | CartoDB API key for official Carto Dark Matter tiles. |
+| `VITE_MAP_TILES_URL` | *(Optional)* | Custom tile template URL (e.g. Mapbox, MapTiler, Stadia). |
+
+> **Graceful Map Fallback:** If neither `VITE_CARTO_API_KEY` nor `VITE_MAP_TILES_URL` is set, SynthLeak automatically falls back to OpenStreetMap tiles with a CSS cyber-industrial dark filter (`.map-tiles-dark`). No "API KEY REQUIRED" watermarks or broken maps occur.
+
+### Build & Directory Settings
+- **Base directory:** `frontend`
+- **Build command:** `npm run build`
+- **Publish directory:** `frontend/dist` (or `dist` if base directory is set to `frontend`)
 - **Demo replay** never touches the network. Every simulated frame, alert and ticket is labelled "Simulated"
   (`SIM-ALT-*`, `SIM-WO-*`), per the metric-integrity rule in `CONTRACT.md` section 8.
 - **Adaptive Noise Suppression toggle** is *display-side only*: the waterfall learns the background from frames the

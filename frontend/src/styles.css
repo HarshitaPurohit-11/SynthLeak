@@ -783,6 +783,10 @@ button {
   min-height: 320px;
   background: #090e15;
 }
+/* Cyber-industrial dark filter for zero-key OpenStreetMap tiles */
+.map-tiles-dark {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3);
+}
 .legend {
   position: absolute;
   bottom: 14px;

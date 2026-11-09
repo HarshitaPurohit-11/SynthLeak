@@ -61,8 +61,17 @@ export class WsClient {
       let data: unknown;
       try { data = JSON.parse(ev.data as string); } catch { return; }
       const frame = parseFrame(data);
-      if (frame) { this.h.onFrame(frame); return; }
-      if (parseHeartbeat(data)) this.h.onHeartbeat?.();
+      if (frame) {
+        this.attempts = 0;
+        this.h.onStatus("open");
+        this.h.onFrame(frame);
+        return;
+      }
+      if (parseHeartbeat(data)) {
+        this.attempts = 0;
+        this.h.onStatus("open");
+        this.h.onHeartbeat?.();
+      }
     };
     ws.onclose = () => { if (!this.stopped) this.scheduleRetry(); };
     ws.onerror = () => ws.close();

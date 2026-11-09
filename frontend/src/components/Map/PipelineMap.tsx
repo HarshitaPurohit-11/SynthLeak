@@ -37,16 +37,40 @@ export default function PipelineMap({
       14,
     );
 
-    // CartoDB Dark Matter tile layer for cyber-industrial aesthetic
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {
+    // Tile layer configuration with dark cyber-industrial aesthetic and zero-key graceful fallback
+    const customTiles = import.meta.env.VITE_MAP_TILES_URL as string | undefined;
+    const cartoKey = import.meta.env.VITE_CARTO_API_KEY as string | undefined;
+
+    let tileUrl: string;
+    let tileOptions: L.TileLayerOptions;
+
+    if (customTiles) {
+      tileUrl = customTiles;
+      tileOptions = {
+        maxZoom: 19,
+        attribution:
+          '&copy; Map Provider &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      };
+    } else if (cartoKey) {
+      tileUrl = `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${encodeURIComponent(cartoKey)}`;
+      tileOptions = {
         maxZoom: 19,
         subdomains: "abcd",
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      },
-    ).addTo(m);
+      };
+    } else {
+      // Free graceful fallback: OpenStreetMap with dark technical filter (no API key required)
+      tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      tileOptions = {
+        maxZoom: 19,
+        className: "map-tiles-dark",
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      };
+    }
+
+    L.tileLayer(tileUrl, tileOptions).addTo(m);
 
     pipeLayer.current = L.layerGroup().addTo(m);
     leakLayer.current = L.layerGroup().addTo(m);

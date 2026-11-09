@@ -80,8 +80,12 @@ export default function App() {
   const empty =
     mode === "demo"
       ? { title: "Starting Scenario Simulator", hint: "Generating synthetic acoustic emission frames..." }
+      : stream.connection === "connecting"
+      ? { title: "Connecting to Live Backend", hint: "Establishing secure WebSocket telemetry stream..." }
       : stream.connection === "reconnecting"
-      ? { title: "Awaiting Live WebSocket Connection", hint: "Connecting to FastAPI backend on port 8000..." }
+      ? { title: "Reconnecting to Backend", hint: "Attempting to re-establish telemetry stream..." }
+      : stream.connection === "waiting"
+      ? { title: "Connected (Standby)", hint: "Awaiting incoming acoustic spectrogram frames..." }
       : { title: "Live Acoustic Signal Stream Active", hint: "Continuous 44.1 kHz STFT frames arriving at ~15 FPS." };
 
   return (
