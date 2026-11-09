@@ -22,21 +22,17 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  # Note: Frontend service configuration is reserved for when the React dashboard is implemented.
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   container_name: synthleak-frontend
-  #   ports:
-  #     - "3000:80"
-  #   environment:
-  #     - VITE_API_BASE_URL=http://localhost:8000
-  #     - VITE_WS_STREAM_URL=ws://localhost:8000/ws/stream
-  #   depends_on:
-  #     backend:
-  #       condition: service_healthy
-  #   restart: unless-stopped
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: synthleak-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   synthleak-data:
