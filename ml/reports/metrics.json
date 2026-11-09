@@ -1,0 +1,172 @@
+{
+  "ans_off": {
+    "accuracy": 0.9895833333333334,
+    "confusion_matrix": [
+      [
+        119,
+        1,
+        0,
+        0
+      ],
+      [
+        4,
+        116,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        120,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        120
+      ]
+    ],
+    "per_class_recall": {
+      "NORMAL_FLOW": 0.9916666666666667,
+      "AMBIENT_URBAN": 0.9666666666666667,
+      "PINHOLE_LEAK": 1.0,
+      "CAVITATION_BURST": 1.0
+    },
+    "per_class_precision": {
+      "NORMAL_FLOW": 0.967479674796748,
+      "AMBIENT_URBAN": 0.9914529914529915,
+      "PINHOLE_LEAK": 1.0,
+      "CAVITATION_BURST": 1.0
+    },
+    "alert_detection_recall": 1.0,
+    "false_alarm_rate": 0.0
+  },
+  "ans_on": {
+    "accuracy": 0.9875,
+    "confusion_matrix": [
+      [
+        119,
+        1,
+        0,
+        0
+      ],
+      [
+        5,
+        115,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        120,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        120
+      ]
+    ],
+    "per_class_recall": {
+      "NORMAL_FLOW": 0.9916666666666667,
+      "AMBIENT_URBAN": 0.9583333333333334,
+      "PINHOLE_LEAK": 1.0,
+      "CAVITATION_BURST": 1.0
+    },
+    "per_class_precision": {
+      "NORMAL_FLOW": 0.9596774193548387,
+      "AMBIENT_URBAN": 0.9913793103448276,
+      "PINHOLE_LEAK": 1.0,
+      "CAVITATION_BURST": 1.0
+    },
+    "alert_detection_recall": 1.0,
+    "false_alarm_rate": 0.0
+  },
+  "snr_sweep": {
+    "snr_db": [
+      20,
+      10,
+      5,
+      0,
+      -5
+    ],
+    "ans_off": {
+      "class_accuracy": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "alert_recall": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "ans_on": {
+      "class_accuracy": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "alert_recall": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "latency_ms": {
+    "mean": 14.273443250003766,
+    "p50": 14.132377500004623,
+    "p95": 15.100516249947304,
+    "max": 24.11738399996466,
+    "n": 100,
+    "real_time_factor": 0.009604779774859101
+  },
+  "setup": {
+    "dataset": "synthetic (ml/training/synthetic.py)",
+    "test_seed": 12345,
+    "n_test_per_class": 120,
+    "n_snr_per_class": 50,
+    "model_meta": {
+      "classes": {
+        "0": "NORMAL_FLOW",
+        "1": "AMBIENT_URBAN",
+        "2": "PINHOLE_LEAK",
+        "3": "CAVITATION_BURST"
+      },
+      "sample_rate": 44100,
+      "n_fft": 1024,
+      "hop_length": 512,
+      "n_mels": 128,
+      "best_val_acc": 0.99,
+      "epochs": 20,
+      "n_per_class": 600,
+      "n_real_clips": 0,
+      "ans_fraction": 0.5,
+      "seed": 42,
+      "data": "synthetic",
+      "params": 208692,
+      "torch": "2.15.0+cu132",
+      "python": "3.12.3",
+      "trained_at_utc": "2026-11-08T14:31:55Z"
+    },
+    "machine": {
+      "processor": "x86_64",
+      "python": "3.12.3",
+      "torch": "2.15.0+cu132",
+      "threads": 1
+    }
+  }
+}

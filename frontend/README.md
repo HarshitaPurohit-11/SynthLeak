@@ -47,15 +47,45 @@ frontend/
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev          # http://localhost:5173
 ```
 
-The application will run on `http://localhost:3000` or `http://localhost:5173` and connect to the backend API at `http://localhost:8000`.
+The dev server proxies `/health`, `/pipelines`, `/alerts`, `/tickets` and `/ws` to the backend at
+`http://localhost:8000` (override with `BACKEND_URL=http://host:8000 npm run dev`), so no CORS setup is needed.
 
-### Running Tests
+**No backend yet?** Click **Demo replay** in the top bar (or open `http://localhost:5173/?mode=demo`). It plays a
+looping, clearly labelled *simulated* scenario (traffic baseline, pinhole leak, burst, repair) and exercises the whole
+flow: spectrogram, alerts, map, work-order dispatch.
+
+### Running Tests / Build
 ```bash
-npm run test
+npm run test         # unit tests (mel mapping, contract parsing, geometry, demo scenario, ticket form)
+npm run typecheck
+npm run build        # production bundle in dist/
 ```
+
+### Docker
+`frontend/Dockerfile` builds the bundle and serves it with nginx, reverse-proxying the API and WebSocket to the
+`backend` service. Add this to `docker-compose.yml` (root file, owned by Backend & Infrastructure):
+```yaml
+  frontend:
+    build: ./frontend
+    ports: ["3000:80"]
+    depends_on: [backend]
+```
+
+## Behaviour notes
+- **Live backend** mode consumes `ws://<host>/ws/stream` and REST `GET /pipelines`, `GET /alerts` (polled every 5 s and
+  right after an alert frame), `POST /tickets`. Unknown or malformed WebSocket messages are ignored; the socket
+  reconnects with backoff and the UI shows the connection state. After 3 failed attempts it offers Demo replay.
+- **Demo replay** never touches the network. Every simulated frame, alert and ticket is labelled "Simulated"
+  (`SIM-ALT-*`, `SIM-WO-*`), per the metric-integrity rule in `CONTRACT.md` section 8.
+- **Adaptive Noise Suppression toggle** is *display-side only*: the waterfall learns the background from frames the
+  model labelled NORMAL_FLOW / AMBIENT_URBAN and subtracts it from what you see. It does not change the backend's
+  model input (the contract has no control message for that).
+- Estimated leak position comes from `estimated_chainage_meters` in the alert record, interpolated along the pipeline
+  geometry. Nothing is shown if the backend does not provide it.
+- The map uses OpenStreetMap tiles; offline, pipelines still draw on a plain background.
 
 ---
 
