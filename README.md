@@ -4,172 +4,190 @@
 
 ---
 
-## 1. Project Overview
+## 1. Quick Start: Run Locally on Windows (One-Click)
 
-SynthLeak is an intelligent acoustic monitoring and incident localization platform designed for municipal water distribution infrastructure.
+The simplest way to run SynthLeak locally without Docker is using the dedicated Windows startup scripts.
 
-Water utilities globally lose up to 30% of treated drinking water to non-revenue water (NRW) losses caused by concealed pipe wall breaches, pinhole orifices, and cavitation damage. Traditional detection relies on periodic manual acoustic surveys with ground microphones or delayed volumetric mass balances that fail to pinpoint leaks before catastrophic pipe bursts occur.
+### Prerequisites
+- **Windows 10 / 11**
+- **Python 3.10+** (Python 3.13 supported; installed with `.venv` in repository)
+- **Node.js 18+** (Node 22 / npm included on system PATH)
 
-SynthLeak provides a continuous, automated sensing pipeline:
-1. Captures acoustic pipe wall emissions at 44.1 kHz.
-2. Applies digital signal processing (4th-order Butterworth bandpass filtering and Adaptive Noise Suppression via spectral subtraction).
-3. Computes continuous Short-Time Fourier Transform (STFT) 128-bin Mel spectrograms.
-4. Classifies acoustic signatures using a 4-class convolutional neural network (`NORMAL_FLOW`, `AMBIENT_URBAN`, `PINHOLE_LEAK`, `CAVITATION_BURST`).
-5. Computes Time Difference of Arrival (TDoA) cross-correlation between dual-sensor pairs to locate leaks along pipe chainage.
-6. Streams live waterfall spectrograms and instantaneous anomaly alerts over WebSockets to an operator GIS dashboard (React & Leaflet.js) with integrated work-order dispatch.
+### Starting the Complete System
+1. Open the project root folder: `C:\Users\Admin\Desktop\SynthLeak`
+2. **Double-click [`start-dev.bat`](start-dev.bat)** (or execute `.\start-dev.bat` in Command Prompt / PowerShell).
+
+This one-click launcher automatically:
+- Activates your existing Python `.venv`.
+- Verifies and installs missing frontend `node_modules` (first-time only).
+- Launches the **FastAPI Backend & ML DSP Streamer** on port `8000` in its own window.
+- Launches the **React + Leaflet GIS Dashboard** on port `5173` in its own window.
+- Automatically opens your default web browser to [http://localhost:5173](http://localhost:5173).
+- Displays live diagnostic logs in both command windows.
+
+### Stopping the System
+- **Double-click [`stop-dev.bat`](stop-dev.bat)** (or close both command prompt windows).  
+  This cleanly releases ports `8000` and `5173`.
 
 ---
 
-## 2. Technology Stack
+## 2. Essential URLs & Endpoints
 
-| Domain | Technologies | Purpose |
+| Service / Interface | Local URL | Description |
 |---|---|---|
-| **Audio Acquisition & DSP** | NumPy, SciPy Signal, SoundDevice / PyAudio | Circular ring buffering, Butterworth filtering, Adaptive Noise Suppression |
-| **Acoustic ML Inference** | PyTorch / ONNX, Librosa | 4-class CNN acoustic classifier, 128-bin Mel spectrogram tensor extraction |
-| **Backend API & Streaming** | Python 3.10+, FastAPI, Uvicorn, WebSockets | Asynchronous REST endpoints, real-time WebSocket distribution, alert evaluation |
-| **Data Persistence** | SQLite 3 (`synthleak.db`), SQLAlchemy, aiosqlite | Relational storage for pipelines, sensor telemetry logs, alerts, and work orders |
-| **Operator Dashboard** | React 18, TypeScript, Tailwind CSS, Vite | Responsive management console, incident management modals |
-| **Visualization & GIS** | HTML5 2D Canvas / WebGL, Leaflet.js | High-fps rolling waterfall spectrogram, interactive GIS pipeline mapping |
-| **Deployment & Tooling** | Docker, Docker Compose, Pytest, HTTPX | Containerized execution, automated contract validation, API test harness |
+| **Operator Dashboard (UI)** | [http://localhost:5173](http://localhost:5173) | React GIS Leaflet map, waterfall spectrogram, alert stream, work orders |
+| **Backend REST API** | [http://127.0.0.1:8000](http://127.0.0.1:8000) | Core FastAPI server |
+| **Interactive API Docs (Swagger)** | [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) | OpenAPI interactive endpoint exploration & testing |
+| **Alternative API Docs (ReDoc)** | [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc) | Clean schema & payload documentation |
+| **System Health Check** | [http://127.0.0.1:8000/health](http://127.0.0.1:8000/health) | Subsystem health (`database`, `ml_inference`, `audio_buffer`) |
+| **Real-Time Audio Stream** | `ws://127.0.0.1:8000/ws/stream` | 128-bin Mel spectrogram frames & classification scores @ 15 FPS |
 
 ---
 
-## 3. Prerequisites
+## 3. First-Time Manual Setup (Alternative to start-dev.bat)
 
-- **Python:** Version 3.10 or higher.
-- **Node.js:** Version 18 or higher (required for frontend dashboard development).
-- **Git:** Version 2.30 or higher.
-- **Docker & Docker Compose:** (Optional) Required for containerized deployment.
+If you prefer starting backend and frontend in separate manual terminals:
 
----
-
-## 4. Local Environment Setup
-
-Clone the repository and create an isolated Python virtual environment:
-
+### Step 1: Backend Setup
 ```bash
-# Enter the project root directory
-cd SynthLeak
+# 1. Activate virtual environment
+.\.venv\Scripts\activate
 
-# Create Python virtual environment
-python -m venv venv
+# 2. Start FastAPI server with live reload
+uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
+```
 
-# Activate virtual environment:
-# On Windows (PowerShell):
-.\venv\Scripts\Activate.ps1
-# On Windows (Command Prompt):
-.\venv\Scripts\activate.bat
-# On Linux / macOS:
-source venv/bin/activate
+### Step 2: Frontend Setup
+```bash
+# 1. Navigate to frontend directory
+cd frontend
+
+# 2. Install dependencies (one-time)
+npm install
+
+# 3. Start Vite development server
+npm run dev
 ```
 
 ---
 
-## 5. Dependency Installation
+## 4. System Architecture & Capabilities
 
-Install the backend, DSP, database, and testing dependencies:
-
-```bash
-# Upgrade pip to latest version
-python -m pip install --upgrade pip
-
-# Install project dependencies
-pip install -r requirements.txt
+```
++-----------------------------------------------------------------------------------+
+|                            ACOUSTIC INGESTION PIPELINE                            |
+|                                                                                   |
+|  [Microphone / Sensor]  or  [Scenario Replayer]  (44.1 kHz PCM Audio)             |
+|                                |                                                  |
+|                                v                                                  |
+|  [Circular Ring Buffer] (65,536 float32 samples / 1.48s clip)                     |
+|                                |                                                  |
+|                                v                                                  |
+|  [DSP & Mel Filtering] (4th-order Butterworth + 128-bin Mel Spectrogram)          |
+|                                |                                                  |
+|                                v                                                  |
+|  [4-Class CNN Classifier] (leak_cnn.pt -> NORMAL, AMBIENT, PINHOLE, CAVITATION)  |
++--------------------------------+--------------------------------------------------+
+                                 |
+        +------------------------+------------------------+
+        |                                                 |
+        v                                                 v
++-------------------------------+       +-------------------------------------------+
+|    FastAPI REST Endpoints     |       |         WebSocket Streamer (/ws)          |
+| /health, /pipelines, /alerts, |       | (128-bin normalized Mel frames @ 15 FPS,  |
+|            /tickets           |       |      dBFS sound level, classifications)   |
++---------------+---------------+       +---------------------+---------------------+
+                |                                             |
+                v                                             v
++-----------------------------------------------------------------------------------+
+|                        OPERATOR DASHBOARD (React + Leaflet)                       |
+|                                                                                   |
+| - Canvas Rolling Waterfall Spectrogram (Color-mapped 128 Mel frequency bins)      |
+| - Interactive Leaflet Map with GeoJSON pipeline geometries & sensor markers       |
+| - TDoA Cross-Correlation Acoustic Localization along pipe chainage                |
+| - Real-time Anomaly Alert Log & Work-Order Ticket Dispatch Modal                  |
++-----------------------------------------------------------------------------------+
 ```
 
 ---
 
-## 6. Backend Startup Instructions
+## 5. Audio Engine: Real Hardware Capture vs. Simulation
 
-Once the functional backend entry point is implemented, launch the FastAPI server locally:
+SynthLeak dynamically detects acoustic hardware input:
 
-```bash
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-- **Interactive API Documentation (Swagger):** `http://localhost:8000/docs`
-- **Alternative Documentation (ReDoc):** `http://localhost:8000/redoc`
-- **Health Check Endpoint:** `http://localhost:8000/health`
-- **Real-Time WebSocket Stream:** `ws://localhost:8000/ws/stream`
-
-*(Note: The server will be available once Phase 3 functional backend development is initiated).*
+1. **Physical Hardware Capture (Microphone / Sensor):**
+   - [`audio-engine/capture.py`](audio-engine/capture.py) queries system audio input devices via `sounddevice`.
+   - When a microphone is connected, it acquires live acoustic emissions directly into the ring buffer.
+   - Streamed frames carry `"is_simulated": false`.
+2. **Synthetic Simulation Mode (Automated Fallback):**
+   - If no physical sensor or microphone is detected, the audio engine automatically engages [`backend/simulation.py`](backend/simulation.py).
+   - Replays reproducible 4-class pipeline acoustic signatures (`NORMAL_FLOW`, `AMBIENT_URBAN`, `PINHOLE_LEAK`, `CAVITATION_BURST`).
+   - Streamed frames carry `"is_simulated": true` and the dashboard displays a **`Simulated`** badge in compliance with metric integrity guidelines.
 
 ---
 
-## 7. Docker Startup Instructions
+## 6. Automated Testing & Verification
 
-To build and run the backend inside a containerized environment with persistent volume storage for SQLite:
+SynthLeak includes an automated verification suite across all layers:
 
-### Using Docker Compose
 ```bash
-# Build and start the backend container in detached mode
+# 1. Run Backend Unit & Integration Tests:
+.venv\Scripts\python -m pytest backend/test_backend.py -v
+
+# 2. Run Machine Learning Classifier Tests:
+.venv\Scripts\python -m pytest ml/tests/ -v
+
+# 3. Run Audio Engine DSP Tests:
+.venv\Scripts\python -m pytest audio-engine/tests/ -v
+
+# 4. Run Shared Contract & Schema Verification:
+.venv\Scripts\python scripts/validate_contracts.py
+
+# 5. Run API Test Harness against Live Server:
+.venv\Scripts\python scripts/test_api.py --url http://127.0.0.1:8000
+
+# 6. Run Frontend TypeScript Verification:
+cd frontend && npm run typecheck
+```
+
+---
+
+## 7. Optional Container Deployment (Docker)
+
+Docker is completely optional. If you wish to build or deploy the project in containers:
+
+```bash
+# Build and start both backend and frontend via Docker Compose:
 docker compose up --build -d
 
-# View container logs
-docker compose logs -f backend
+# View logs:
+docker compose logs -f
 
-# Stop the container
+# Shut down containers:
 docker compose down
 ```
 
-### Using Standalone Docker Build
-```bash
-# Build the backend image from the repository root
-docker build -f backend/Dockerfile -t synthleak-backend .
-
-# Run container with mapped port and data volume
-docker run -d -p 8000:8000 -v synthleak-data:/app/data --name synthleak-app synthleak-backend
-```
-
 ---
 
-## 8. API Testing Instructions
+## 8. Common Troubleshooting
 
-SynthLeak includes an automated test harness ([`scripts/test_api.py`](scripts/test_api.py)) and contract verification suite ([`scripts/validate_contracts.py`](scripts/validate_contracts.py)).
-
-### 1. Offline Contract & Schema Verification (Runs Immediately)
-Validates all canonical JSON examples against the Pydantic v2 schemas:
-```bash
-python scripts/validate_contracts.py
-```
-
-### 2. API Test Harness
-Runs offline fixture verification and probes the live backend server:
-```bash
-# Auto-detects live server or falls back to offline contract testing:
-python scripts/test_api.py
-
-# Force offline validation mode only:
-python scripts/test_api.py --offline-only
-
-# Specify custom backend host:
-python scripts/test_api.py --url http://127.0.0.1:8000
-```
-
----
-
-## 9. Documentation References
-
-- **Canonical Interface Contract:** [`CONTRACT.md`](CONTRACT.md) — The single authoritative specification for all schemas, endpoints, and constants.
-- **Engineering Guidelines:** [`PROJECT_GUIDELINES.md`](PROJECT_GUIDELINES.md) — Architectural principles, domain boundaries, and coding standards.
-- **Developer Contribution & Git Workflow:** [`CONTRIBUTING.md`](CONTRIBUTING.md) — Git rules, review checklist, and contract change protocol.
-- **System Architecture:** [`docs/SYSTEM_ARCHITECTURE.md`](docs/SYSTEM_ARCHITECTURE.md) — Signal chain, threading model, and TDoA localization.
-- **API & Protocol Specifications:** [`docs/API_SPECIFICATION.md`](docs/API_SPECIFICATION.md) — Complete REST and WebSocket payload definitions.
-- **Data Formats & Serialization:** [`docs/DATA_FORMATS.md`](docs/DATA_FORMATS.md) — Audio tensors, GeoJSON models, and SQLite DDL.
-- **Integration & Mocking Guide:** [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) — Decoupled development and testing workflows.
-- **Engineering Disciplines & Ownership:** [`docs/TEAM_RESPONSIBILITIES.md`](docs/TEAM_RESPONSIBILITIES.md) — Responsibility matrix.
-
----
-
-## 10. Current Implementation Status
-
-| Component | Status | Description |
+| Issue | Cause | Solution |
 |---|---|---|
-| **Repository & Governance** | **Complete** | Cloned repository, Git safety policies, contribution workflows established. |
-| **Interface Contracts** | **Complete** | Canonical `CONTRACT.md`, shared audio constants, 4-class taxonomy, Pydantic schemas. |
-| **Developer Tooling** | **Complete** | `requirements.txt`, `backend/Dockerfile`, `docker-compose.yml`, test harnesses. |
-| **Verification Suites** | **Complete** | `scripts/validate_contracts.py` (7/7 passed), `scripts/test_api.py` (6/6 passed). |
-| **Backend & Pipeline Core** | *Pending* | FastAPI routes (`/health`, `/pipelines`, `/alerts`, `/tickets`), ring buffer, WebSocket streamer. |
-| **ML Inference Engine** | *Pending* | 4-class CNN model weights, Butterworth DSP filtering, inference callable. |
-| **Frontend GIS Dashboard** | *Pending* | React UI, Canvas waterfall spectrogram, Leaflet map, work-order modal. |
-| **Demo Audio & Fixtures** | *Pending* | Real/synthetic WAV audio samples for all 4 classes, GeoJSON pipeline network. |
+| **Port 8000 already in use** | An earlier instance of Uvicorn or another service is listening on port 8000. | Run [`stop-dev.bat`](stop-dev.bat) to terminate stale processes. |
+| **Port 5173 already in use** | An earlier Vite development server is running. | Run [`stop-dev.bat`](stop-dev.bat) or let Vite choose port 5174. |
+| **`python.exe` not found** | Virtual environment `.venv` is missing or moved. | Run `python -m venv .venv` and install `requirements.txt`. |
+| **`npm` command not recognized** | Node.js is not on your Windows user PATH. | Install Node.js v18+ from [nodejs.org](https://nodejs.org) or ensure `C:\nvm4w\nodejs` is in your environment PATH. |
+| **Database uninitialized** | `data/synthleak.db` not found. | The database initializes automatically upon backend launch via `backend/seed.py`. You do not need to seed manually. |
+
+---
+
+## 9. Documentation Directory
+
+- **Canonical Interface Contract:** [`CONTRACT.md`](CONTRACT.md) — Authoritative schemas, endpoints, and taxonomy.
+- **Project Guidelines:** [`PROJECT_GUIDELINES.md`](PROJECT_GUIDELINES.md) — Architectural rules and domain ownership.
+- **Contribution Workflow:** [`CONTRIBUTING.md`](CONTRIBUTING.md) — Change protocols and Git standards.
+- **System Architecture:** [`docs/SYSTEM_ARCHITECTURE.md`](docs/SYSTEM_ARCHITECTURE.md) — DSP filters, TDoA cross-correlation math, and ML topology.
+- **API Specification:** [`docs/API_SPECIFICATION.md`](docs/API_SPECIFICATION.md) — Comprehensive REST & WebSocket specs.
+- **Backend Guide:** [`backend/README.md`](backend/README.md) — Deep dive into FastAPI internals and database models.
+- **Frontend Guide:** [`frontend/README.md`](frontend/README.md) — React dashboard components and Leaflet GIS integration.
+- **ML Guide:** [`ml/README.md`](ml/README.md) — CNN model architecture, training, and evaluation reports.
